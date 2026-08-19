@@ -51,18 +51,57 @@ resource "azurerm_container_app" "main" {
         name  = "STUDENT_NAME"
         value = var.student_name
       }
+
+      env {
+        name  = "SERVER_PORT"
+        value = tostring(var.container_port)
+      }
+
+      startup_probe {
+        transport               = "HTTP"
+        port                    = var.container_port
+        path                    = "/health"
+        interval_seconds        = 5
+        timeout                 = 3
+        failure_count_threshold = 30
+      }
+
+      liveness_probe {
+        transport               = "HTTP"
+        port                    = var.container_port
+        path                    = "/health"
+        interval_seconds        = 30
+        timeout                 = 3
+        failure_count_threshold = 3
+      }
+
+      readiness_probe {
+        transport               = "HTTP"
+        port                    = var.container_port
+        path                    = "/health"
+        interval_seconds        = 10
+        timeout                 = 3
+        failure_count_threshold = 3
+      }
     }
   }
 
   ingress {
     external_enabled           = true
     allow_insecure_connections = false
-    target_port                = 8080
+    target_port                = var.container_port
     transport                  = "auto"
 
     traffic_weight {
       latest_revision = true
       percentage      = 100
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.max_replicas >= var.min_replicas
+      error_message = "max_replicas no puede ser menor que min_replicas."
     }
   }
 }

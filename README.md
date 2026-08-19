@@ -9,7 +9,16 @@ Infraestructura de Saludo Cloud creada con Terraform sobre Azure Container Apps.
 - Container Apps Environment.
 - Container App con acceso público.
 
-La aplicación utiliza la imagen `peg1163/saludo-cloud:v1` y escucha en el puerto 8080.
+La aplicación recibe una referencia inmutable de imagen mediante
+`container_image` y escucha en el puerto definido por `container_port`. El
+pipeline de `saludo-cloud-api` construye y publica la imagen; Terraform no
+construye el código Java.
+
+Flujo de entrega:
+
+```text
+saludo-cloud-api -> tests -> imagen GHCR -> digest -> Terraform -> Container Apps
+```
 
 ## Uso
 
@@ -27,6 +36,14 @@ terraform init
 terraform fmt -recursive
 terraform validate
 terraform plan -out=tfplan
+```
+
+La referencia de imagen debe entregarse expresamente:
+
+```bash
+terraform plan \
+  -var="container_image=ghcr.io/peg1163/saludo-cloud@sha256:<digest>" \
+  -out=tfplan
 ```
 
 Para desplegar el plan revisado:
@@ -47,4 +64,13 @@ Para eliminar los recursos al terminar:
 terraform destroy
 ```
 
-No se deben subir a Git los archivos `terraform.tfstate`, `.tfvars` ni los planes generados.
+No se deben subir a Git los archivos `terraform.tfstate`, `.tfvars` ni los planes
+generados. El archivo `.terraform.lock.hcl` sí debe versionarse para fijar la
+versión seleccionada del provider.
+
+## Pendientes para el despliegue real
+
+- Crear Azure Container Registry e identidad administrada con rol `AcrPull`, o
+  configurar autenticación si la imagen de GHCR permanece privada.
+- Configurar un backend remoto `azurerm` para el estado.
+- Configurar autenticación OIDC de GitHub Actions hacia Azure.

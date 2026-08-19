@@ -35,15 +35,30 @@ variable "container_app_name" {
 }
 
 variable "container_image" {
-  description = "Imagen pública que ejecutará Container Apps"
+  description = "Referencia inmutable de la imagen que ejecutará Container Apps"
   type        = string
-  default     = "docker.io/peg1163/saludo-cloud:v1"
+
+  validation {
+    condition     = length(trimspace(var.container_image)) > 0
+    error_message = "container_image no puede estar vacía."
+  }
+}
+
+variable "container_port" {
+  description = "Puerto HTTP interno de la aplicación"
+  type        = number
+  default     = 8080
+
+  validation {
+    condition     = var.container_port >= 1 && var.container_port <= 65535
+    error_message = "container_port debe ser un puerto TCP válido."
+  }
 }
 
 variable "student_name" {
   description = "Nombre que devuelve el endpoint /hello"
   type        = string
-  default     = "Jaime ACuña"
+  default     = "Jaime Acuña"
 }
 
 variable "min_replicas" {

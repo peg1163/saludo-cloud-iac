@@ -81,6 +81,40 @@ Para eliminar los recursos al terminar:
 terraform destroy
 ```
 
+## Script de despliegue
+
+El script opcional `deploy.sh` automatiza el flujo completo desde el código de
+la API hasta Azure Container Apps:
+
+```text
+pruebas Gradle
+    -> Docker build
+    -> publicación en GHCR
+    -> digest SHA-256
+    -> terraform plan
+    -> confirmación manual
+    -> terraform apply
+    -> verificación de /hello y /health
+```
+
+Debe ejecutarse desde este repositorio, con `saludo-cloud-api` en la carpeta
+hermana y con las sesiones de Azure CLI y Docker iniciadas:
+
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+Para construir, publicar y revisar el plan sin modificar Azure:
+
+```bash
+./deploy.sh --plan-only
+```
+
+El script despliega por digest inmutable y pide escribir `APLICAR` antes de
+ejecutar el plan. Si se proporcionan `GHCR_TOKEN` y `GHCR_USERNAME`, se usan
+únicamente durante la ejecución y nunca deben guardarse en el repositorio.
+
 No se deben subir a Git los archivos `terraform.tfstate`, `.tfvars` ni los planes
 generados. El archivo `.terraform.lock.hcl` sí debe versionarse para fijar la
 versión seleccionada del provider.

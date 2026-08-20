@@ -17,8 +17,25 @@ construye el código Java.
 Flujo de entrega:
 
 ```text
-saludo-cloud-api -> tests -> imagen GHCR -> digest -> Terraform -> Container Apps
+saludo-cloud-api
+    -> GitHub Actions: tests y build
+    -> GHCR: imagen inmutable por digest
+    -> workflow reutilizable de saludo-cloud-iac
+    -> validación del contrato container_image
+    -> Terraform
+    -> Azure Container Apps
 ```
+
+El workflow reutilizable `.github/workflows/image-contract.yml` recibe desde el
+repositorio de la API una referencia con el formato:
+
+```text
+ghcr.io/peg1163/saludo-cloud@sha256:<digest>
+```
+
+La ejecución deja el traspaso API → IaC registrado en el resumen de GitHub
+Actions. Este paso valida el contrato y no ejecuta `terraform apply`; el
+despliegue requiere una aprobación independiente.
 
 ## Uso
 
